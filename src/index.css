@@ -1,0 +1,64 @@
+/* ─── index.css — Arcane global design system ──────────────────────────────
+   Tokens, resets, and the radial mesh-gradient background canvas.
+   ────────────────────────────────────────────────────────────────────────── */
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+
+/* ── Tokens ─────────────────────────────────────────────────────────────── */
+:root {
+  /* Palette */
+  --c-bg:          #04050d;
+  --c-surface:     rgba(255, 255, 255, 0.035);
+  --c-border:      rgba(255, 255, 255, 0.08);
+  --c-border-hi:   rgba(255, 255, 255, 0.16);
+  --c-text:        #e2e4f0;
+  --c-text-muted:  rgba(200, 204, 230, 0.55);
+  --c-indigo:      #6366f1;
+  --c-violet:      #8b5cf6;
+  --c-cyan:        #06b6d4;
+
+  /* Blur */
+  --blur-glass:    blur(22px) saturate(160%);
+
+  /* Radius */
+  --r-sm:   8px;
+  --r-md:   14px;
+  --r-lg:   20px;
+  --r-xl:   28px;
+
+  /* Typography */
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+}
+
+/* ── Reset ──────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+body {
+  background-color: var(--c-bg);
+  color: var(--c-text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ── Scrollbar ───────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(139, 92, 246, 0.35);
+  border-radius: 99px;
+}
+
+/* ── Glass utility ───────────────────────────────────────────────────────── */
+.glass {
+  background:     var(--c-surface);
+  backdrop-filter: var(--blur-glass);
+  -webkit-backdrop-filter: var(--blur-glass);
+  border: 1px solid var(--c-border);
+}

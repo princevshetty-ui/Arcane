@@ -1,0 +1,174 @@
+/* UploadZone.module.css */
+
+/* ── Outer centering wrapper ─────────────────────────────────────────────── */
+.outer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  padding: 24px;
+  width: 100%;
+  max-width: 560px;
+}
+
+/* ── Wordmark ────────────────────────────────────────────────────────────── */
+.wordmark {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.wordmarkGlyph {
+  font-size: 2.6rem;
+  line-height: 1;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6, #06b6d4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 14px #6366f1aa);
+}
+
+.wordmarkText {
+  font-size: 2.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  background: linear-gradient(135deg, #c7d2fe 20%, #a5b4fc 55%, #67e8f9 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Tagline ─────────────────────────────────────────────────────────────── */
+.tagline {
+  font-size: 0.92rem;
+  color: rgba(200, 204, 230, 0.5);
+  text-align: center;
+  letter-spacing: 0.01em;
+}
+
+/* ── Drop zone ───────────────────────────────────────────────────────────── */
+.zone {
+  position: relative;
+  width: 100%;
+  min-height: 240px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.028);
+  backdrop-filter: blur(22px) saturate(160%);
+  -webkit-backdrop-filter: blur(22px) saturate(160%);
+  cursor: pointer;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.25s;
+}
+
+.zone:hover {
+  background: rgba(255, 255, 255, 0.048);
+}
+
+.zoneDragging {
+  background: rgba(99, 102, 241, 0.08) !important;
+}
+
+.zoneError {
+  background: rgba(239, 68, 68, 0.05) !important;
+}
+
+/* ── Breathing dashed border ring ─────────────────────────────────────────── */
+.borderRing {
+  position: absolute;
+  inset: 0;
+  border-radius: 22px;
+  border: 1.5px dashed rgba(139, 92, 246, 0.35);
+  pointer-events: none;
+  transform-origin: center;
+}
+
+.borderRingActive {
+  border-color: rgba(99, 102, 241, 0.75) !important;
+}
+
+/* ── Glow halo ───────────────────────────────────────────────────────────── */
+.glow {
+  position: absolute;
+  inset: -1px;
+  border-radius: 22px;
+  border: 1px solid transparent;
+  background: linear-gradient(#04050d, #04050d) padding-box,
+              linear-gradient(135deg, transparent 0%, transparent 100%) border-box;
+  pointer-events: none;
+  transition: opacity 0.3s;
+  opacity: 0;
+}
+
+.zone:hover .glow,
+.glowActive {
+  opacity: 1 !important;
+  background: linear-gradient(#04050d, #04050d) padding-box,
+              linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #06b6d4 100%) border-box;
+  border: 1px solid transparent;
+  box-shadow: 0 0 32px rgba(99, 102, 241, 0.18),
+              inset 0 0 32px rgba(139, 92, 246, 0.06);
+}
+
+/* ── State blocks (shared) ───────────────────────────────────────────────── */
+.stateBlock {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 32px 24px;
+  text-align: center;
+}
+
+/* ── Icon colours ────────────────────────────────────────────────────────── */
+.uploadIcon { color: rgba(139, 92, 246, 0.7); }
+.spinnerIcon { color: #6366f1; }
+.fileIcon   { color: #8b5cf6; }
+.errorIcon  { color: #f87171; }
+
+/* ── Text ────────────────────────────────────────────────────────────────── */
+.statusTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #e2e4f0;
+}
+
+.statusSub {
+  font-size: 0.82rem;
+  color: rgba(200, 204, 230, 0.5);
+}
+
+.errorMessage {
+  font-size: 0.82rem;
+  color: #fca5a5;
+  max-width: 320px;
+  line-height: 1.5;
+}
+
+.retryHint {
+  font-size: 0.76rem;
+  color: rgba(200, 204, 230, 0.4);
+}
+
+/* ── Badge ───────────────────────────────────────────────────────────────── */
+.badge {
+  margin-top: 4px;
+  padding: 3px 10px;
+  border-radius: 99px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.28);
+  color: #a5b4fc;
+  text-transform: uppercase;
+}
+
+/* ── Hidden file input ───────────────────────────────────────────────────── */
+.hiddenInput {
+  display: none;
+}
