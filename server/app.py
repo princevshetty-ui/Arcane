@@ -18,7 +18,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app, origins=r"http://(localhost|127\.0\.0\.1)(:\d+)?", allow_headers=["Content-Type"])
+CORS(app, origins="*", allow_headers=["Content-Type"])
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 if not GEMINI_API_KEY:

@@ -1,25 +1,19 @@
 /**
- * GraphCanvas.jsx
- * ────────────────────────────────────────────────────────────────────────────
- * Arcane — 3-D knowledge-graph visualiser
- * FIX: Added toneMapped: false to all MeshStandardMaterial instances
- *      to prevent white bloom washout.
+ * GraphCanvas.jsx — Arcane
+ * Clean version: no bloom, natural emissive glow, readable labels
  */
 
 import { useRef, useCallback, useEffect } from "react";
 import ForceGraph3D from "react-force-graph-3d";
 import * as THREE from "three";
-import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass";
 
-// ─── Node colour palette by type ─────────────────────────────────────────────
 const NODE_COLORS = {
-  concept: "#6366f1", // electric indigo
-  entity:  "#8b5cf6", // violet
-  event:   "#06b6d4", // cyan
-  default: "#a78bfa", // soft lavender fallback
+  concept: "#818cf8",
+  entity:  "#c084fc",
+  event:   "#34d399",
+  default: "#94a3b8",
 };
 
-// Radius scales with connectivity (degree) so hubs are visually larger
 const BASE_RADIUS = 4;
 const MAX_RADIUS  = 10;
 
@@ -33,101 +27,99 @@ function getNodeRadius(node, graphData) {
   return Math.min(BASE_RADIUS + degree * 1.2, MAX_RADIUS);
 }
 
-// ─── Component ───────────────────────────────────────────────────────────────
 export default function GraphCanvas({ graphData, selectedNode, onNodeClick }) {
   const fgRef = useRef();
 
-  // ── Post-processing: UnrealBloomPass ──────────────────────────────────────
-  useEffect(() => {
-    if (!fgRef.current) return;
-
-    // ForceGraph3D exposes the underlying Three.js postProcessingComposer
-    const bloomPass = new UnrealBloomPass(
-      new THREE.Vector2(window.innerWidth, window.innerHeight),
-      /* strength  */ 0.8,
-      /* radius    */ 0.4,
-      /* threshold */ 0.1
-    );
-    fgRef.current.postProcessingComposer().addPass(bloomPass);
-  }, []);
-
-  // ── d3-force charge: keep nodes from clumping ─────────────────────────────
   useEffect(() => {
     if (!fgRef.current) return;
     fgRef.current.d3Force("charge").strength(-200);
   }, [graphData]);
 
-  // ── Node click: smooth camera zoom to node over 1 000 ms ─────────────────
   const handleNodeClick = useCallback(
     (node) => {
       onNodeClick?.(node);
-      const distance = 80;
+      const distance  = 80;
       const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
       fgRef.current?.cameraPosition(
         { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio },
-        node,       // lookAt target
-        1000        // ms transition duration
+        node,
+        1000
       );
     },
     [onNodeClick]
   );
 
-  // ── Custom node: emissive glowing sphere (graph-physics.md §1) ────────────
   const nodeThreeObject = useCallback(
     (node) => {
       const isSelected = selectedNode?.id === node.id;
       const color      = NODE_COLORS[node.type] ?? NODE_COLORS.default;
       const radius     = getNodeRadius(node, graphData);
+      const group      = new THREE.Group();
 
-      // Outer glow shell (only for selected node)
-      const group = new THREE.Group();
-
+      // Outer glow shell (selected only)
       if (isSelected) {
-        const glowGeo  = new THREE.SphereGeometry(radius * 1.6, 16, 16);
-        const glowMat  = new THREE.MeshStandardMaterial({
-          color:            color,
-          emissive:         color,
-          emissiveIntensity: 0.4,
-          transparent:      true,
-          opacity:          0.10,
-          side:             THREE.BackSide,
-          toneMapped:       false,   // KEY FIX: keeps colour vibrant under bloom
+        const glowGeo = new THREE.SphereGeometry(radius * 1.5, 16, 16);
+        const glowMat = new THREE.MeshStandardMaterial({
+          color,
+          emissive:          color,
+          emissiveIntensity: 0.3,
+          transparent:       true,
+          opacity:           0.12,
+          side:              THREE.BackSide,
+          toneMapped:        false,
         });
         group.add(new THREE.Mesh(glowGeo, glowMat));
       }
 
-      // Core sphere — emissive glow balanced with bloom pass
+      // Core sphere
       const coreGeo = new THREE.SphereGeometry(radius, 20, 20);
       const coreMat = new THREE.MeshStandardMaterial({
-        color:             color,
+        color,
         emissive:          color,
-        emissiveIntensity: isSelected ? 3.0 : 1.5,
-        roughness:         0.2,
-        metalness:         0.3,
-        toneMapped:        false,   // KEY FIX: prevents white washout
+        emissiveIntensity: isSelected ? 2.0 : 1.2,
+        roughness:         0.3,
+        metalness:         0.2,
+        toneMapped:        false,
       });
       group.add(new THREE.Mesh(coreGeo, coreMat));
 
-      // Floating text label (sprite)
+      // Text label
       const canvas  = document.createElement("canvas");
       canvas.width  = 256;
       canvas.height = 64;
       const ctx     = canvas.getContext("2d");
-      ctx.font      = "bold 22px Inter, sans-serif";
-      ctx.fillStyle = isSelected ? "#ffffff" : "rgba(220,220,255,0.85)";
-      ctx.textAlign = "center";
-      ctx.fillText(node.label ?? node.id, 128, 40);
+      ctx.clearRect(0, 0, 256, 64);
 
-      const texture  = new THREE.CanvasTexture(canvas);
+      // Label background pill
+      const text     = node.label ?? node.id;
+      ctx.font       = "bold 18px Inter, sans-serif";
+      const metrics  = ctx.measureText(text);
+      const tw       = metrics.width + 20;
+      const tx       = (256 - tw) / 2;
+
+      ctx.fillStyle  = "rgba(4,5,13,0.75)";
+      ctx.beginPath();
+      ctx.roundRect(tx, 16, tw, 28, 6);
+      ctx.fill();
+
+      // Label text
+      ctx.fillStyle  = isSelected ? "#ffffff" : color;
+      ctx.textAlign  = "center";
+      ctx.fillText(text, 128, 36);
+
+      const texture   = new THREE.CanvasTexture(canvas);
       const spriteMat = new THREE.SpriteMaterial({
         map:         texture,
         transparent: true,
-        opacity:     isSelected ? 1 : 0.75,
+        opacity:     isSelected ? 1 : 0.9,
         depthWrite:  false,
+        toneMapped:  false,
+        sizeAttenuation: true,
       });
-      const sprite    = new THREE.Sprite(spriteMat);
-      sprite.scale.set(24, 6, 1);
-      sprite.position.set(0, radius + 7, 0);
+      const sprite = new THREE.Sprite(spriteMat);
+      sprite.scale.set(26, 7, 1);
+      sprite.position.set(0, radius + 8, 0);
+      sprite.renderOrder = 1;
       group.add(sprite);
 
       return group;
@@ -135,7 +127,6 @@ export default function GraphCanvas({ graphData, selectedNode, onNodeClick }) {
     [selectedNode, graphData]
   );
 
-  // ─── Link styling ─────────────────────────────────────────────────────────
   const linkColor = useCallback(
     (link) => {
       const sid = link.source?.id ?? link.source;
@@ -143,7 +134,7 @@ export default function GraphCanvas({ graphData, selectedNode, onNodeClick }) {
       const isActive =
         selectedNode &&
         (sid === selectedNode.id || tid === selectedNode.id);
-      return isActive ? "#c4b5fd" : "rgba(139,92,246,0.3)";
+      return isActive ? "#c4b5fd" : "rgba(148,163,184,0.2)";
     },
     [selectedNode]
   );
@@ -155,35 +146,29 @@ export default function GraphCanvas({ graphData, selectedNode, onNodeClick }) {
       return selectedNode &&
         (sid === selectedNode.id || tid === selectedNode.id)
         ? 2
-        : 0.6;
+        : 0.5;
     },
     [selectedNode]
   );
 
-  // ─── Render ───────────────────────────────────────────────────────────────
   if (!graphData) return null;
 
   return (
     <ForceGraph3D
       ref={fgRef}
-      // ── Data ──────────────────────────────────────────────────────────────
       graphData={graphData}
-      // ── Visuals ───────────────────────────────────────────────────────────
       backgroundColor="#04050d"
       numDimensions={3}
       nodeThreeObject={nodeThreeObject}
       nodeThreeObjectExtend={false}
-      // ── Links ─────────────────────────────────────────────────────────────
       linkColor={linkColor}
       linkWidth={linkWidth}
       linkDirectionalParticles={4}
       linkDirectionalParticleSpeed={0.006}
-      linkDirectionalParticleWidth={1.8}
-      linkDirectionalParticleColor={() => "#a78bfa"}
-      // ── Interaction ───────────────────────────────────────────────────────
+      linkDirectionalParticleWidth={1.5}
+      linkDirectionalParticleColor={() => "#818cf8"}
       enableNavigationControls={true}
       onNodeClick={handleNodeClick}
-      // ── Labels (built-in, hidden — we render our own via sprites) ─────────
       nodeLabel={() => ""}
     />
   );

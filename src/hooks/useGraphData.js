@@ -6,7 +6,7 @@
 
 import { useState, useCallback } from "react";
 
-const API_URL = "http://localhost:5000/api/upload";
+const API_URL = "https://supreme-parakeet-wrjq5q5wj44wf99jv-5000.app.github.dev/api/upload";
 
 export function useGraphData() {
   const [graphData, setGraphData] = useState(null);
