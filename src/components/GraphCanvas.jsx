@@ -2,17 +2,8 @@
  * GraphCanvas.jsx
  * ────────────────────────────────────────────────────────────────────────────
  * Arcane — 3-D knowledge-graph visualiser
- *
- * Implements every rule in graph-physics.md:
- *  ✦  ForceGraph3D  (react-force-graph-3d)
- *  ✦  THREE.Mesh  SphereGeometry  + MeshStandardMaterial (emissive, intensity 2)
- *  ✦  linkDirectionalParticles=4  speed=0.006
- *  ✦  EffectComposer  +  UnrealBloomPass  for the neon-aura glow
- *  ✦  onNodeClick  →  cameraPosition() zoom over 1 000 ms
- *  ✦  backgroundColor="#04050d"
- *  ✦  charge force  −200
- *  ✦  numDimensions=3
- *  ✦  enableNavigationControls
+ * FIX: Added toneMapped: false to all MeshStandardMaterial instances
+ *      to prevent white bloom washout.
  */
 
 import { useRef, useCallback, useEffect } from "react";
@@ -53,9 +44,9 @@ export default function GraphCanvas({ graphData, selectedNode, onNodeClick }) {
     // ForceGraph3D exposes the underlying Three.js postProcessingComposer
     const bloomPass = new UnrealBloomPass(
       new THREE.Vector2(window.innerWidth, window.innerHeight),
-      /* strength  */ 0.8,   // was 1.6 — too intense, merged nodes into white blob
-      /* radius    */ 0.4,   // was 0.6 — tighter glow halo
-      /* threshold */ 0.22   // was 0.1 — only bright pixels bloom, not everything
+      /* strength  */ 0.8,
+      /* radius    */ 0.4,
+      /* threshold */ 0.1
     );
     fgRef.current.postProcessingComposer().addPass(bloomPass);
   }, []);
@@ -100,6 +91,7 @@ export default function GraphCanvas({ graphData, selectedNode, onNodeClick }) {
           transparent:      true,
           opacity:          0.10,
           side:             THREE.BackSide,
+          toneMapped:       false,   // KEY FIX: keeps colour vibrant under bloom
         });
         group.add(new THREE.Mesh(glowGeo, glowMat));
       }
@@ -109,9 +101,10 @@ export default function GraphCanvas({ graphData, selectedNode, onNodeClick }) {
       const coreMat = new THREE.MeshStandardMaterial({
         color:             color,
         emissive:          color,
-        emissiveIntensity: isSelected ? 2.2 : 1.2,  // was 3.2/2.0 — too hot
+        emissiveIntensity: isSelected ? 3.0 : 1.5,
         roughness:         0.2,
         metalness:         0.3,
+        toneMapped:        false,   // KEY FIX: prevents white washout
       });
       group.add(new THREE.Mesh(coreGeo, coreMat));
 
